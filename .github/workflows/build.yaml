@@ -1,0 +1,55 @@
+name: Build image
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_name:
+        description: "Container image to publish"
+        required: true
+        default: "ghcr.io/${{ github.repository_owner }}/bootc-os:latest"
+      types:
+        description: "Bootc artifacts"
+        required: true
+        default: |
+          qcow2
+          vmdk
+          raw
+          vhd
+          iso
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build & push bootc container image
+        run: |
+          docker build -t "${{ github.event.inputs.image_name }}" -f Containerfile .
+          docker push "${{ github.event.inputs.image_name }}"
+
+      - name: Build disk images
+        id: bib
+        uses: osbuild/bootc-image-builder-action@v0.0.2
+        with:
+          image: ${{ github.event.inputs.image_name }}
+          config-file: ./bootc/config.toml
+          types: ${{ github.event.inputs.types }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: bootc-${{ github.run_id }}
+          path: ${{ steps.bib.outputs.output-directory }}
+          if-no-files-found: error
