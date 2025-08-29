@@ -3,7 +3,7 @@ FROM quay.io/centos-bootc/centos-bootc:stream9
 
 RUN dnf -y install dnf-plugins-core && \
     dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo && \
-    dnf-config-manager -y --add-repo=https://netdevops.fury.site/yum/ && \
+    dnf config-manager -y --add-repo=https://netdevops.fury.site/yum/ && \
     echo "gpgcheck=0" | sudo tee -a /etc/yum.repos.d/netdevops.fury.site_yum_.repo \
     dnf -y install \
       git \
