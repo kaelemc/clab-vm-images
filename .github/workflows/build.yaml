@@ -47,6 +47,23 @@ jobs:
           config-file: ./bootc/config.toml
           types: ${{ env.TYPES }}
 
+      - name: Generate OVA files from VMDK
+        run: |
+          sudo apt-get update && sudo apt-get install -y qemu-utils python3
+          mkdir -p ${{ steps.bib.outputs.output-directory }}/ova
+          for vmdk_file in ${{ steps.bib.outputs.output-directory }}/vmdk/*.vmdk; do
+            if [ -f "$vmdk_file" ]; then
+              basename=$(basename "$vmdk_file" .vmdk)
+              python3 ovfbuilder.py \
+                --vm-name "clab-$basename" \
+                --cpus 2 \
+                --memory-mb 2048 \
+                --disk "$vmdk_file" \
+                --template ovf_template.xml \
+                --out "${{ steps.bib.outputs.output-directory }}/ova/${basename}.ova"
+            fi
+          done
+
       - name: Upload workflow artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -62,3 +79,4 @@ jobs:
           files: |
             ${{ steps.bib.outputs.output-directory }}/qcow2/*.qcow2
             ${{ steps.bib.outputs.output-directory }}/vmdk/*.vmdk
+            ${{ steps.bib.outputs.output-directory }}/ova/*.ova

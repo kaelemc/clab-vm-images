@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ovf:Envelope
+  xmlns:ovf="http://schemas.dmtf.org/ovf/envelope/1"
+  xmlns:rasd="http://schemas.dmtf.org/wbem/wscim/1/cim-schema/2/CIM_ResourceAllocationSettingData"
+  xmlns:vssd="http://schemas.dmtf.org/wbem/wscim/1/cim-schema/2/CIM_VirtualSystemSettingData"
+  xmlns:vmw="http://www.vmware.com/schema/ovf"
+  ovf:version="1.0">
+  <ovf:References>
+    <ovf:File ovf:id="file1" ovf:href="disk.vmdk" ovf:size="$populated_size"/>
+  </ovf:References>
+
+  <ovf:DiskSection>
+    <ovf:Info>Virtual disk information</ovf:Info>
+    <ovf:Disk ovf:diskId="vmdisk1"
+              ovf:fileRef="file1"
+              ovf:capacity="$virtual_size"
+              ovf:capacityAllocationUnits="byte"
+              ovf:format="http://www.vmware.com/interfaces/specifications/vmdk.html#streamOptimized"
+              ovf:populatedSize="$populated_size"/>
+  </ovf:DiskSection>
+
+  <ovf:NetworkSection>
+    <ovf:Info>Logical networks</ovf:Info>
+    <ovf:Network ovf:name="$network_name"/>
+  </ovf:NetworkSection>
+
+  <ovf:VirtualSystem ovf:id="$vm_name">
+    <ovf:Info>bootc VM</ovf:Info>
+    <ovf:Name>$vm_name</ovf:Name>
+    <ovf:VirtualHardwareSection>
+      <ovf:Info>VM hardware</ovf:Info>
+      <vssd:VirtualSystemType>vmx-14</vssd:VirtualSystemType>
+
+      <ovf:Item>
+        <rasd:Description>Number of Virtual CPUs</rasd:Description>
+        <rasd:ElementName>$cpus virtual CPU(s)</rasd:ElementName>
+        <rasd:InstanceID>1</rasd:InstanceID>
+        <rasd:ResourceType>3</rasd:ResourceType>
+        <rasd:VirtualQuantity>$cpus</rasd:VirtualQuantity>
+      </ovf:Item>
+
+      <ovf:Item>
+        <rasd:Description>Memory Size</rasd:Description>
+        <rasd:ElementName>$memory_mb MB of memory</rasd:ElementName>
+        <rasd:InstanceID>2</rasd:InstanceID>
+        <rasd:ResourceType>4</rasd:ResourceType>
+        <rasd:VirtualQuantity>$memory_mb</rasd:VirtualQuantity>
+      </ovf:Item>
+
+      <ovf:Item>
+        <rasd:ElementName>SCSI Controller 0</rasd:ElementName>
+        <rasd:InstanceID>3</rasd:InstanceID>
+        <rasd:ResourceType>6</rasd:ResourceType>
+        <rasd:ResourceSubType>lsilogic</rasd:ResourceSubType>
+      </ovf:Item>
+
+      <ovf:Item>
+        <rasd:ElementName>Hard disk 1</rasd:ElementName>
+        <rasd:InstanceID>4</rasd:InstanceID>
+        <rasd:ResourceType>17</rasd:ResourceType>
+        <rasd:Parent>3</rasd:Parent>
+        <rasd:AddressOnParent>0</rasd:AddressOnParent>
+        <rasd:HostResource>ovf:/disk/vmdisk1</rasd:HostResource>
+      </ovf:Item>
+
+      <ovf:Item>
+        <rasd:ElementName>Ethernet 1</rasd:ElementName>
+        <rasd:InstanceID>5</rasd:InstanceID>
+        <rasd:ResourceType>10</rasd:ResourceType>
+        <rasd:ResourceSubType>$nic_type</rasd:ResourceSubType>
+        <rasd:AutomaticAllocation>true</rasd:AutomaticAllocation>
+        <rasd:Connection>$network_name</rasd:Connection>
+      </ovf:Item>
+    </ovf:VirtualHardwareSection>
+  </ovf:VirtualSystem>
+</ovf:Envelope>
