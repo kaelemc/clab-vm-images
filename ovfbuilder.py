@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-import argparse, json, os, tarfile, hashlib, subprocess
+import argparse
+import json
+import os
+import tarfile
+import hashlib
+import subprocess
 from string import Template
 
 def qemu_virtual_size_bytes(vmdk: str) -> int:
