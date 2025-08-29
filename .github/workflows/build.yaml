@@ -36,7 +36,7 @@ jobs:
 
       - name: Build & push bootc container image
         run: |
-          docker build -t "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }:${{ env.TAG }}" .
+          docker build -t "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}" .
           docker push "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}"
 
       - name: Build VM images from bootc image
