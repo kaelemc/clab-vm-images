@@ -50,11 +50,12 @@ jobs:
       - name: Generate OVA files from VMDK
         run: |
           sudo apt-get update && sudo apt-get install -y qemu-utils python3
-          mkdir -p ${{ steps.bib.outputs.output-directory }}/ova
+          sudo mkdir -p ${{ steps.bib.outputs.output-directory }}/ova
+          sudo chmod 755 ${{ steps.bib.outputs.output-directory }}/ova
           for vmdk_file in ${{ steps.bib.outputs.output-directory }}/vmdk/*.vmdk; do
             if [ -f "$vmdk_file" ]; then
               basename=$(basename "$vmdk_file" .vmdk)
-              python3 ovfbuilder.py \
+              sudo python3 ovfbuilder.py \
                 --vm-name "clab-$basename" \
                 --cpus 2 \
                 --memory-mb 2048 \
