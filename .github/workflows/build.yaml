@@ -18,11 +18,7 @@ jobs:
     env:
       REGISTRY: ghcr.io
       IMAGE_NAME: ${{ github.repository }}
-      TAG: ${{ github.event_name == 'release'
-                      && github.event.release.tag_name
-                      || (github.event_name == 'pull_request'
-                            && toLower(replace(github.head_ref, '/', '-'))
-                            || toLower(replace(github.ref_name, '/', '-'))) }}
+      TAG: ${{ github.head_ref || github.ref_name }}
       TYPES: |
         qcow2
         vmdk
