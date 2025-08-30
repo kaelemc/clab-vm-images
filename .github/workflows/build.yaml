@@ -47,20 +47,37 @@ jobs:
           config-file: ./bootc/config.toml
           types: ${{ env.TYPES }}
 
-      - name: Generate OVA files from VMDK
+      - name: Sparsify VM images
         run: |
-          sudo apt-get update && sudo apt-get install -y qemu-utils python3
+          sudo apt-get update && sudo apt-get install -y qemu-utils
+          sudo mkdir -p ${{ steps.bib.outputs.output-directory }}/vmdk-sparse
+          sudo mkdir -p ${{ steps.bib.outputs.output-directory }}/qcow2-sparse
+          
+          qcow2_file=${{ steps.bib.outputs.output-directory }}/qcow2/*.qcow2
+          basename=$(basename "$qcow2_file" .qcow2)
+          sparse_qcow2="${{ steps.bib.outputs.output-directory }}/qcow2-sparse/${basename}.qcow2"
+          sudo qemu-img convert -p -f qcow2 -O qcow2 -c "$qcow2_file" "$sparse_qcow2"
+          echo "Original QCOW2 size: $(ls -lh "$qcow2_file" | awk '{print $5}')"
+          echo "Sparse QCOW2 size: $(ls -lh "$sparse_qcow2" | awk '{print $5}')"
+          
+          vmdk_file=${{ steps.bib.outputs.output-directory }}/vmdk/*.vmdk
+          basename=$(basename "$vmdk_file" .vmdk)
+          sparse_vmdk="${{ steps.bib.outputs.output-directory }}/vmdk-sparse/${basename}.vmdk"
+          sudo qemu-img convert -p -f vmdk -O vmdk -o subformat=streamOptimized "$vmdk_file" "$sparse_vmdk"
+          echo "Original VMDK size: $(ls -lh "$vmdk_file" | awk '{print $5}')"
+          echo "Sparse VMDK size: $(ls -lh "$sparse_vmdk" | awk '{print $5}')"
+
+      - name: Generate OVA file
+        run: |
+          sudo apt-get install -y python3
           sudo mkdir -p ${{ steps.bib.outputs.output-directory }}/ova
-          sudo chmod 755 ${{ steps.bib.outputs.output-directory }}/ova
-          for vmdk_file in ${{ steps.bib.outputs.output-directory }}/vmdk/*.vmdk; do
-            if [ -f "$vmdk_file" ]; then
-              basename=$(basename "$vmdk_file" .vmdk)
-              sudo python3 ovfbuilder.py \
-                --disk "$vmdk_file" \
-                --template ovf_template.xml \
-                --out "${{ steps.bib.outputs.output-directory }}/ova/${basename}.ova"
-            fi
-          done
+          
+          vmdk_file=${{ steps.bib.outputs.output-directory }}/vmdk-sparse/*.vmdk
+          basename=$(basename "$vmdk_file" .vmdk)
+          sudo python3 ovfbuilder.py \
+            --disk "$vmdk_file" \
+            --template ovf_template.xml \
+            --out "${{ steps.bib.outputs.output-directory }}/ova/${basename}.ova"
 
       - name: Upload workflow artifacts
         uses: actions/upload-artifact@v4
@@ -75,6 +92,6 @@ jobs:
         with:
           tag_name: ${{ github.event.release.tag_name }}
           files: |
-            ${{ steps.bib.outputs.output-directory }}/qcow2/*.qcow2
-            ${{ steps.bib.outputs.output-directory }}/vmdk/*.vmdk
+            ${{ steps.bib.outputs.output-directory }}/qcow2-sparse/*.qcow2
+            ${{ steps.bib.outputs.output-directory }}/vmdk-sparse/*.vmdk
             ${{ steps.bib.outputs.output-directory }}/ova/*.ova
